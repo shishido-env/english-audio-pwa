@@ -20,3 +20,5 @@ export type PlayerState =
   | { kind: "paused"; index: number; phase: Phase };
 
 export type Theme = "light" | "dark" | "system";
+
+export type VoiceMode = "both" | "ja" | "en";

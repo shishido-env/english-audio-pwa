@@ -2,6 +2,7 @@ export const STORAGE_KEY = "english-audio-pwa:deck";
 export const LIBRARY_STORAGE_KEY = "english-audio-pwa:library";
 export const THEME_STORAGE_KEY = "english-audio-pwa:theme";
 export const INTERVALS_STORAGE_KEY = "english-audio-pwa:intervals";
+export const PRACTICE_STORAGE_KEY = "english-audio-pwa:practice";
 
 export const DEFAULT_SILENCE_JA_TO_EN_MS = 400;
 export const DEFAULT_SILENCE_BETWEEN_ROWS_MS = 800;

@@ -6,6 +6,7 @@ type Props = {
   currentIndex?: number;
   limit?: number;
   title?: string;
+  hideEnglish?: boolean;
   onSelect?: (index: number) => void;
 };
 
@@ -15,6 +16,7 @@ export function UpcomingList({
   currentIndex,
   limit,
   title = "Next up",
+  hideEnglish = false,
   onSelect,
 }: Props) {
   const end = limit === undefined ? pairs.length : startIndex + limit;
@@ -47,7 +49,7 @@ export function UpcomingList({
                   </p>
                   <p
                     lang="en"
-                    className="mt-0.5 text-sm leading-snug text-muted-foreground"
+                    className={`mt-0.5 text-sm leading-snug text-muted-foreground ${hideEnglish ? "select-none blur-md" : ""}`}
                   >
                     {p.en}
                   </p>

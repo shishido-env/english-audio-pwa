@@ -12,6 +12,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { useIntervals } from "@/hooks/useIntervals";
 import { usePlayer } from "@/hooks/usePlayer";
 import { useWakeLock } from "@/hooks/useWakeLock";
+import { usePracticeMode } from "@/hooks/usePracticeMode";
 import { speech } from "@/lib/speechInstance";
 
 export default function App() {
@@ -27,11 +28,13 @@ export default function App() {
   const { theme, setTheme } = useTheme();
   const { jaToEnMs, betweenRowsMs, setJaToEnMs, setBetweenRowsMs } =
     useIntervals();
+  const { hideEnglish, voiceMode, setHideEnglish, cycleVoiceMode } =
+    usePracticeMode();
   const pairs = activeDeck?.pairs ?? [];
   const { state, index, play, playFrom, goTo, stop, next, prev } = usePlayer(
     pairs,
     speech,
-    { jaToEnMs, betweenRowsMs },
+    { jaToEnMs, betweenRowsMs, voiceMode },
   );
   useWakeLock(state.kind === "playing");
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -78,6 +81,8 @@ export default function App() {
                         pair={pairs[index] ?? { ja: "", en: "" }}
                         index={index}
                         total={pairs.length}
+                        hideEnglish={hideEnglish}
+                        onToggleHideEnglish={() => setHideEnglish(!hideEnglish)}
                       />
                     </div>
                     <div>
@@ -86,6 +91,7 @@ export default function App() {
                         startIndex={0}
                         currentIndex={index}
                         title="フレーズ一覧"
+                        hideEnglish={hideEnglish}
                         onSelect={(i) => {
                           if (state.kind === "idle") goTo(i);
                           else handleSelectPhrase(i);
@@ -104,11 +110,13 @@ export default function App() {
           state={state}
           index={index}
           total={pairs.length}
+          voiceMode={voiceMode}
           onPlay={handlePlay}
           onPause={stop}
           onStop={stop}
           onPrev={prev}
           onNext={next}
+          onCycleVoiceMode={cycleVoiceMode}
         />
       )}
       <SettingsSheet

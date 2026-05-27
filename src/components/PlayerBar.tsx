@@ -3,28 +3,44 @@ import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { STOP_LONG_PRESS_MS } from "@/config";
-import type { PlayerState } from "@/types";
+import type { PlayerState, VoiceMode } from "@/types";
 
 type Props = {
   state: PlayerState;
   index: number;
   total: number;
+  voiceMode: VoiceMode;
   onPlay: () => void;
   onPause: () => void;
   onStop: () => void;
   onPrev: () => void;
   onNext: () => void;
+  onCycleVoiceMode: () => void;
+};
+
+const VOICE_MODE_LABEL: Record<VoiceMode, string> = {
+  both: "日+英",
+  ja: "日",
+  en: "英",
+};
+
+const VOICE_MODE_NEXT_LABEL: Record<VoiceMode, string> = {
+  both: "日本語のみ",
+  ja: "英語のみ",
+  en: "日本語と英語",
 };
 
 export function PlayerBar({
   state,
   index,
   total,
+  voiceMode,
   onPlay,
   onPause,
   onStop,
   onPrev,
   onNext,
+  onCycleVoiceMode,
 }: Props) {
   const isPlaying = state.kind === "playing";
   const percent = total > 0 ? Math.round(((index + 1) / total) * 100) : 0;
@@ -76,6 +92,14 @@ export function PlayerBar({
           <span className="text-xs tabular-nums text-muted-foreground">
             {percent}%
           </span>
+          <button
+            type="button"
+            onClick={onCycleVoiceMode}
+            aria-label={`音声: ${VOICE_MODE_LABEL[voiceMode]}（タップで${VOICE_MODE_NEXT_LABEL[voiceMode]}）`}
+            className="inline-flex h-7 min-w-[44px] items-center justify-center rounded-full border bg-background px-2 text-xs font-medium tabular-nums text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {VOICE_MODE_LABEL[voiceMode]}
+          </button>
         </div>
         <div className="mt-2 flex items-center justify-center gap-6">
           <Button

@@ -93,4 +93,30 @@ describe("usePlayer", () => {
     expect(result.current.index).toBe(1);
     expect(speech.calls.length).toBe(0);
   });
+
+  it("voiceMode='ja' は英語をスキップする", async () => {
+    const speech = makeSpeech();
+    const { result } = renderHook(() =>
+      usePlayer(pairs, speech, { voiceMode: "ja" }),
+    );
+    act(() => result.current.play());
+    await waitFor(() => {
+      expect(result.current.state.kind).toBe("idle");
+    });
+    expect(speech.calls.every((c) => c.lang === "ja-JP")).toBe(true);
+    expect(speech.calls.length).toBe(pairs.length);
+  });
+
+  it("voiceMode='en' は日本語をスキップする", async () => {
+    const speech = makeSpeech();
+    const { result } = renderHook(() =>
+      usePlayer(pairs, speech, { voiceMode: "en" }),
+    );
+    act(() => result.current.play());
+    await waitFor(() => {
+      expect(result.current.state.kind).toBe("idle");
+    });
+    expect(speech.calls.every((c) => c.lang === "en-US")).toBe(true);
+    expect(speech.calls.length).toBe(pairs.length);
+  });
 });

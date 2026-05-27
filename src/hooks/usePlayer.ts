@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Pair, PlayerState } from "@/types";
+import type { Pair, PlayerState, VoiceMode } from "@/types";
 import type { Speech } from "@/lib/speech";
 import {
   LANG_JA,
@@ -13,6 +13,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 export type PlayerOptions = {
   jaToEnMs?: number;
   betweenRowsMs?: number;
+  voiceMode?: VoiceMode;
 };
 
 export function usePlayer(
@@ -23,9 +24,10 @@ export function usePlayer(
   const {
     jaToEnMs = DEFAULT_SILENCE_JA_TO_EN_MS,
     betweenRowsMs = DEFAULT_SILENCE_BETWEEN_ROWS_MS,
+    voiceMode = "both",
   } = options;
-  const intervalsRef = useRef({ jaToEnMs, betweenRowsMs });
-  intervalsRef.current = { jaToEnMs, betweenRowsMs };
+  const settingsRef = useRef({ jaToEnMs, betweenRowsMs, voiceMode });
+  settingsRef.current = { jaToEnMs, betweenRowsMs, voiceMode };
   const [state, setState] = useState<PlayerState>({ kind: "idle" });
   const [index, setIndex] = useState(0);
   const runIdRef = useRef(0);
@@ -42,17 +44,24 @@ export function usePlayer(
       const myRunId = ++runIdRef.current;
       let i = startIndex;
       while (i < pairs.length) {
+        const { jaToEnMs, betweenRowsMs, voiceMode } = settingsRef.current;
+        const playJa = voiceMode !== "en";
+        const playEn = voiceMode !== "ja";
         if (runIdRef.current !== myRunId) return;
         setState({ kind: "playing", index: i, phase: "ja" });
         setIndex(i);
-        await speech.speak(pairs[i].ja, LANG_JA);
-        if (runIdRef.current !== myRunId) return;
-        await sleep(intervalsRef.current.jaToEnMs);
-        if (runIdRef.current !== myRunId) return;
-        setState({ kind: "playing", index: i, phase: "en" });
-        await speech.speak(pairs[i].en, LANG_EN);
-        if (runIdRef.current !== myRunId) return;
-        if (i < pairs.length - 1) await sleep(intervalsRef.current.betweenRowsMs);
+        if (playJa) {
+          await speech.speak(pairs[i].ja, LANG_JA);
+          if (runIdRef.current !== myRunId) return;
+          if (playEn) await sleep(jaToEnMs);
+          if (runIdRef.current !== myRunId) return;
+        }
+        if (playEn) {
+          setState({ kind: "playing", index: i, phase: "en" });
+          await speech.speak(pairs[i].en, LANG_EN);
+          if (runIdRef.current !== myRunId) return;
+        }
+        if (i < pairs.length - 1) await sleep(betweenRowsMs);
         i++;
       }
       if (runIdRef.current === myRunId) {
