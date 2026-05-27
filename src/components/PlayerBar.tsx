@@ -29,26 +29,29 @@ export function PlayerBar({
   const isPlaying = state.kind === "playing";
   const percent = total > 0 ? Math.round(((index + 1) / total) * 100) : 0;
   const timerRef = useRef<number | null>(null);
+  const firedRef = useRef(false);
   const [pressing, setPressing] = useState(false);
 
   const startPress = () => {
+    firedRef.current = false;
     setPressing(true);
     timerRef.current = window.setTimeout(() => {
+      firedRef.current = true;
+      timerRef.current = null;
       onStop();
       setPressing(false);
     }, STOP_LONG_PRESS_MS);
   };
 
-  const endPress = (fired: boolean) => {
+  const endPress = () => {
     setPressing(false);
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
-      if (!fired) {
-        if (isPlaying) onPause();
-        else onPlay();
-      }
     }
+    if (firedRef.current) return;
+    if (isPlaying) onPause();
+    else onPlay();
   };
 
   useEffect(() => {
@@ -84,9 +87,9 @@ export function PlayerBar({
             aria-label={isPlaying ? "一時停止" : "再生"}
             disabled={disabled}
             onPointerDown={startPress}
-            onPointerUp={() => endPress(false)}
-            onPointerLeave={() => endPress(false)}
-            onPointerCancel={() => endPress(false)}
+            onPointerUp={endPress}
+            onPointerLeave={endPress}
+            onPointerCancel={endPress}
             className={`relative flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${pressing ? "ring-4 ring-primary/30" : ""}`}
           >
             {isPlaying ? <Pause className="size-7" /> : <Play className="size-7 translate-x-0.5" />}

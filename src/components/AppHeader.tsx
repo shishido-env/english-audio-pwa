@@ -15,6 +15,7 @@ export function AppHeader({ onOpenSettings }: Props) {
         <Button
           variant="ghost"
           size="icon"
+          className="size-12"
           aria-label="設定を開く"
           onClick={onOpenSettings}
         >
