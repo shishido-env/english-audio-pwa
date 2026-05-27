@@ -10,14 +10,20 @@ import { SettingsSheet } from "@/components/SettingsSheet";
 import { CsvFileInput } from "@/components/CsvFileInput";
 import { useDeck } from "@/hooks/useDeck";
 import { useTheme } from "@/hooks/useTheme";
+import { useIntervals } from "@/hooks/useIntervals";
 import { usePlayer } from "@/hooks/usePlayer";
 import { speech } from "@/lib/speechInstance";
 
 export default function App() {
   const { deck, importCsv, clear } = useDeck();
   const { theme, setTheme } = useTheme();
+  const { jaToEnMs, betweenRowsMs, setJaToEnMs, setBetweenRowsMs } =
+    useIntervals();
   const pairs = deck?.pairs ?? [];
-  const { state, index, play, stop, next, prev } = usePlayer(pairs, speech);
+  const { state, index, play, stop, next, prev } = usePlayer(pairs, speech, {
+    jaToEnMs,
+    betweenRowsMs,
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const supported = speech.isSupported();
@@ -71,6 +77,10 @@ export default function App() {
         onOpenChange={setSettingsOpen}
         theme={theme}
         onThemeChange={setTheme}
+        jaToEnMs={jaToEnMs}
+        onJaToEnMsChange={setJaToEnMs}
+        betweenRowsMs={betweenRowsMs}
+        onBetweenRowsMsChange={setBetweenRowsMs}
         hasDeck={!!deck}
         onClearDeck={clear}
       />

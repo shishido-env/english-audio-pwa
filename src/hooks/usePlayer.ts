@@ -4,13 +4,28 @@ import type { Speech } from "@/lib/speech";
 import {
   LANG_JA,
   LANG_EN,
-  SILENCE_JA_TO_EN_MS,
-  SILENCE_BETWEEN_ROWS_MS,
+  DEFAULT_SILENCE_JA_TO_EN_MS,
+  DEFAULT_SILENCE_BETWEEN_ROWS_MS,
 } from "@/config";
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export function usePlayer(pairs: Pair[], speech: Speech) {
+export type PlayerOptions = {
+  jaToEnMs?: number;
+  betweenRowsMs?: number;
+};
+
+export function usePlayer(
+  pairs: Pair[],
+  speech: Speech,
+  options: PlayerOptions = {},
+) {
+  const {
+    jaToEnMs = DEFAULT_SILENCE_JA_TO_EN_MS,
+    betweenRowsMs = DEFAULT_SILENCE_BETWEEN_ROWS_MS,
+  } = options;
+  const intervalsRef = useRef({ jaToEnMs, betweenRowsMs });
+  intervalsRef.current = { jaToEnMs, betweenRowsMs };
   const [state, setState] = useState<PlayerState>({ kind: "idle" });
   const [index, setIndex] = useState(0);
   const runIdRef = useRef(0);
@@ -32,12 +47,12 @@ export function usePlayer(pairs: Pair[], speech: Speech) {
         setIndex(i);
         await speech.speak(pairs[i].ja, LANG_JA);
         if (runIdRef.current !== myRunId) return;
-        await sleep(SILENCE_JA_TO_EN_MS);
+        await sleep(intervalsRef.current.jaToEnMs);
         if (runIdRef.current !== myRunId) return;
         setState({ kind: "playing", index: i, phase: "en" });
         await speech.speak(pairs[i].en, LANG_EN);
         if (runIdRef.current !== myRunId) return;
-        if (i < pairs.length - 1) await sleep(SILENCE_BETWEEN_ROWS_MS);
+        if (i < pairs.length - 1) await sleep(intervalsRef.current.betweenRowsMs);
         i++;
       }
       if (runIdRef.current === myRunId) {

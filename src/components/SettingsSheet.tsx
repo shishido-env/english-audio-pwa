@@ -22,21 +22,38 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import type { Theme } from "@/types";
+import {
+  BETWEEN_ROWS_INTERVAL_OPTIONS_MS,
+  JA_TO_EN_INTERVAL_OPTIONS_MS,
+} from "@/config";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   theme: Theme;
   onThemeChange: (theme: Theme) => void;
+  jaToEnMs: number;
+  onJaToEnMsChange: (ms: number) => void;
+  betweenRowsMs: number;
+  onBetweenRowsMsChange: (ms: number) => void;
   hasDeck: boolean;
   onClearDeck: () => void;
 };
+
+function formatSec(ms: number): string {
+  const sec = ms / 1000;
+  return sec === Math.floor(sec) ? `${sec}秒` : `${sec.toFixed(1)}秒`;
+}
 
 export function SettingsSheet({
   open,
   onOpenChange,
   theme,
   onThemeChange,
+  jaToEnMs,
+  onJaToEnMsChange,
+  betweenRowsMs,
+  onBetweenRowsMsChange,
   hasDeck,
   onClearDeck,
 }: Props) {
@@ -65,6 +82,46 @@ export function SettingsSheet({
                   >
                     <RadioGroupItem value={t} />
                     <span className="text-sm capitalize">{t}</span>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+            <Separator />
+            <div>
+              <p className="text-sm font-medium">日本語のあとの間隔</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                長めに設定すると暗誦練習に使えます
+              </p>
+              <RadioGroup
+                className="mt-3 grid grid-cols-3 gap-2"
+                value={String(jaToEnMs)}
+                onValueChange={(v) => onJaToEnMsChange(Number(v))}
+              >
+                {JA_TO_EN_INTERVAL_OPTIONS_MS.map((ms) => (
+                  <label
+                    key={ms}
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-md border p-2 text-sm hover:bg-accent"
+                  >
+                    <RadioGroupItem value={String(ms)} />
+                    <span>{formatSec(ms)}</span>
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+            <div>
+              <p className="text-sm font-medium">行と行の間隔</p>
+              <RadioGroup
+                className="mt-3 grid grid-cols-3 gap-2"
+                value={String(betweenRowsMs)}
+                onValueChange={(v) => onBetweenRowsMsChange(Number(v))}
+              >
+                {BETWEEN_ROWS_INTERVAL_OPTIONS_MS.map((ms) => (
+                  <label
+                    key={ms}
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-md border p-2 text-sm hover:bg-accent"
+                  >
+                    <RadioGroupItem value={String(ms)} />
+                    <span>{formatSec(ms)}</span>
                   </label>
                 ))}
               </RadioGroup>
