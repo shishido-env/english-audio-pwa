@@ -36,8 +36,8 @@ type Props = {
   onJaToEnMsChange: (ms: number) => void;
   betweenRowsMs: number;
   onBetweenRowsMsChange: (ms: number) => void;
-  hasDeck: boolean;
-  onClearDeck: () => void;
+  hasDecks: boolean;
+  onClearAllDecks: () => void;
 };
 
 function formatSec(ms: number): string {
@@ -54,8 +54,8 @@ export function SettingsSheet({
   onJaToEnMsChange,
   betweenRowsMs,
   onBetweenRowsMsChange,
-  hasDeck,
-  onClearDeck,
+  hasDecks,
+  onClearAllDecks,
 }: Props) {
   const [confirmingClear, setConfirmingClear] = useState(false);
 
@@ -129,14 +129,17 @@ export function SettingsSheet({
             <Separator />
             <div>
               <p className="text-sm font-medium">デッキ</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                すべてのデッキを削除します
+              </p>
               <Button
                 variant="destructive"
                 className="mt-3 w-full"
-                disabled={!hasDeck}
+                disabled={!hasDecks}
                 onClick={() => setConfirmingClear(true)}
               >
                 <Trash2 className="size-4" />
-                デッキを削除
+                すべて削除
               </Button>
             </div>
           </div>
@@ -150,9 +153,9 @@ export function SettingsSheet({
       <AlertDialog open={confirmingClear} onOpenChange={setConfirmingClear}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>デッキを削除しますか？</AlertDialogTitle>
+            <AlertDialogTitle>すべてのデッキを削除しますか？</AlertDialogTitle>
             <AlertDialogDescription>
-              現在のデッキは完全に消えます。元に戻すには再度CSVを読み込んでください。
+              全てのデッキとフレーズが完全に消えます。元に戻すには再度CSVを読み込んでください。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -160,7 +163,7 @@ export function SettingsSheet({
             <AlertDialogAction
               onClick={() => {
                 setConfirmingClear(false);
-                onClearDeck();
+                onClearAllDecks();
               }}
             >
               削除する

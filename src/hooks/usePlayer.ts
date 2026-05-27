@@ -66,6 +66,24 @@ export function usePlayer(
     void runFrom(index);
   }, [runFrom, index]);
 
+  const playFrom = useCallback(
+    (i: number) => {
+      const clamped = Math.max(0, Math.min(i, pairs.length - 1));
+      setIndex(clamped);
+      speech.cancel();
+      void runFrom(clamped);
+    },
+    [pairs.length, runFrom, speech],
+  );
+
+  const goTo = useCallback(
+    (i: number) => {
+      const clamped = Math.max(0, Math.min(i, pairs.length - 1));
+      setIndex(clamped);
+    },
+    [pairs.length],
+  );
+
   const next = useCallback(() => {
     setIndex((i) => Math.min(i + 1, Math.max(pairs.length - 1, 0)));
   }, [pairs.length]);
@@ -81,5 +99,5 @@ export function usePlayer(
     };
   }, [speech]);
 
-  return { state, index, play, stop, next, prev };
+  return { state, index, play, playFrom, goTo, stop, next, prev };
 }

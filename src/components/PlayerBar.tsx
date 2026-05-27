@@ -29,27 +29,33 @@ export function PlayerBar({
   const isPlaying = state.kind === "playing";
   const percent = total > 0 ? Math.round(((index + 1) / total) * 100) : 0;
   const timerRef = useRef<number | null>(null);
-  const firedRef = useRef(false);
+  const suppressClickRef = useRef(false);
   const [pressing, setPressing] = useState(false);
 
   const startPress = () => {
-    firedRef.current = false;
     setPressing(true);
+    if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     timerRef.current = window.setTimeout(() => {
-      firedRef.current = true;
       timerRef.current = null;
-      onStop();
+      suppressClickRef.current = true;
       setPressing(false);
+      onStop();
     }, STOP_LONG_PRESS_MS);
   };
 
-  const endPress = () => {
+  const cancelPress = () => {
     setPressing(false);
     if (timerRef.current !== null) {
       window.clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    if (firedRef.current) return;
+  };
+
+  const handleClick = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     if (isPlaying) onPause();
     else onPlay();
   };
@@ -64,7 +70,7 @@ export function PlayerBar({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-10 border-t bg-background/85 backdrop-blur">
-      <div className="mx-auto max-w-2xl px-4 pt-2 pb-3 sm:px-6">
+      <div className="mx-auto max-w-3xl px-4 pt-2 pb-3 sm:px-6">
         <div className="flex items-center gap-3">
           <Progress value={percent} className="h-1 flex-1" />
           <span className="text-xs tabular-nums text-muted-foreground">
@@ -87,10 +93,11 @@ export function PlayerBar({
             aria-label={isPlaying ? "一時停止" : "再生"}
             disabled={disabled}
             onPointerDown={startPress}
-            onPointerUp={endPress}
-            onPointerLeave={endPress}
-            onPointerCancel={endPress}
-            className={`relative flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform active:scale-95 disabled:opacity-40 disabled:pointer-events-none ${pressing ? "ring-4 ring-primary/30" : ""}`}
+            onPointerUp={cancelPress}
+            onPointerLeave={cancelPress}
+            onPointerCancel={cancelPress}
+            onClick={handleClick}
+            className={`relative flex size-16 items-center justify-center rounded-full bg-primary text-primary-foreground transition-transform disabled:opacity-40 disabled:pointer-events-none ${pressing ? "ring-4 ring-primary/30" : ""}`}
           >
             {isPlaying ? <Pause className="size-7" /> : <Play className="size-7 translate-x-0.5" />}
           </button>

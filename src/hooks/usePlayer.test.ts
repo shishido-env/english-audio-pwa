@@ -73,4 +73,24 @@ describe("usePlayer", () => {
     expect(result.current.state.kind).toBe("idle");
     expect(speech.cancel).toHaveBeenCalled();
   });
+
+  it("playFrom は指定の index から再生する", async () => {
+    const speech = makeSpeech();
+    const { result } = renderHook(() => usePlayer(pairs, speech));
+    act(() => result.current.playFrom(1));
+    await waitFor(() => {
+      expect(speech.calls.length).toBeGreaterThanOrEqual(2);
+    });
+    expect(speech.calls[0]).toEqual({ text: "ありがとう", lang: "ja-JP" });
+    expect(speech.calls[1]).toEqual({ text: "Thank you", lang: "en-US" });
+    expect(result.current.index).toBe(1);
+  });
+
+  it("goTo は再生せず index だけ変える", () => {
+    const speech = makeSpeech();
+    const { result } = renderHook(() => usePlayer(pairs, speech));
+    act(() => result.current.goTo(1));
+    expect(result.current.index).toBe(1);
+    expect(speech.calls.length).toBe(0);
+  });
 });

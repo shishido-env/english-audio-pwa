@@ -1,4 +1,5 @@
 export const STORAGE_KEY = "english-audio-pwa:deck";
+export const LIBRARY_STORAGE_KEY = "english-audio-pwa:library";
 export const THEME_STORAGE_KEY = "english-audio-pwa:theme";
 export const INTERVALS_STORAGE_KEY = "english-audio-pwa:intervals";
 

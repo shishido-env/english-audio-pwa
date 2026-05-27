@@ -2,28 +2,38 @@ import { useState } from "react";
 import { Toaster, toast } from "sonner";
 import { AppHeader } from "@/components/AppHeader";
 import { EmptyState } from "@/components/EmptyState";
-import { DeckCard } from "@/components/DeckCard";
 import { UpcomingList } from "@/components/UpcomingList";
 import { NowPlayingHero } from "@/components/NowPlayingHero";
 import { PlayerBar } from "@/components/PlayerBar";
 import { SettingsSheet } from "@/components/SettingsSheet";
 import { CsvFileInput } from "@/components/CsvFileInput";
-import { useDeck } from "@/hooks/useDeck";
+import { useLibrary } from "@/hooks/useLibrary";
 import { useTheme } from "@/hooks/useTheme";
 import { useIntervals } from "@/hooks/useIntervals";
 import { usePlayer } from "@/hooks/usePlayer";
+import { useWakeLock } from "@/hooks/useWakeLock";
 import { speech } from "@/lib/speechInstance";
 
 export default function App() {
-  const { deck, importCsv, clear } = useDeck();
+  const {
+    library,
+    activeDeck,
+    importCsv,
+    selectDeck,
+    renameDeck,
+    removeDeck,
+    clearAll,
+  } = useLibrary();
   const { theme, setTheme } = useTheme();
   const { jaToEnMs, betweenRowsMs, setJaToEnMs, setBetweenRowsMs } =
     useIntervals();
-  const pairs = deck?.pairs ?? [];
-  const { state, index, play, stop, next, prev } = usePlayer(pairs, speech, {
-    jaToEnMs,
-    betweenRowsMs,
-  });
+  const pairs = activeDeck?.pairs ?? [];
+  const { state, index, play, playFrom, goTo, stop, next, prev } = usePlayer(
+    pairs,
+    speech,
+    { jaToEnMs, betweenRowsMs },
+  );
+  useWakeLock(state.kind === "playing");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const supported = speech.isSupported();
@@ -35,32 +45,61 @@ export default function App() {
     play();
   };
 
+  const handleSelectPhrase = (i: number) => {
+    if (!supported) {
+      toast.error("この端末はTTSに対応していません");
+      return;
+    }
+    playFrom(i);
+  };
+
   return (
     <div className="min-h-dvh bg-background text-foreground">
-      <AppHeader onOpenSettings={() => setSettingsOpen(true)} />
-      <main className="pb-32">
-        {!deck && (
-          <CsvFileInput hasExistingDeck={false} onImport={importCsv}>
-            {(open) => <EmptyState onPickFile={open} />}
-          </CsvFileInput>
+      <CsvFileInput onImport={importCsv}>
+        {(open) => (
+          <>
+            <AppHeader
+              decks={library.decks}
+              activeId={library.activeId}
+              onSelectDeck={selectDeck}
+              onRenameDeck={renameDeck}
+              onRemoveDeck={removeDeck}
+              onAddDeck={open}
+              onOpenSettings={() => setSettingsOpen(true)}
+            />
+            <main className="pb-36">
+              {!activeDeck && <EmptyState onPickFile={open} />}
+              {activeDeck && (
+                <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 md:pt-8">
+                  <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
+                    <div className="lg:sticky lg:top-24 lg:self-start">
+                      <NowPlayingHero
+                        state={state}
+                        pair={pairs[index] ?? { ja: "", en: "" }}
+                        index={index}
+                        total={pairs.length}
+                      />
+                    </div>
+                    <div>
+                      <UpcomingList
+                        pairs={pairs}
+                        startIndex={0}
+                        currentIndex={index}
+                        title="フレーズ一覧"
+                        onSelect={(i) => {
+                          if (state.kind === "idle") goTo(i);
+                          else handleSelectPhrase(i);
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </main>
+          </>
         )}
-        {deck && (
-          <div className="mx-auto max-w-2xl space-y-6 px-4 pt-6 sm:px-6">
-            <CsvFileInput hasExistingDeck={true} onImport={importCsv}>
-              {(open) => <DeckCard deck={deck} onReimport={open} />}
-            </CsvFileInput>
-            {state.kind === "idle" ? (
-              <UpcomingList pairs={pairs} startIndex={index} />
-            ) : (
-              <>
-                <NowPlayingHero state={state} pair={pairs[index]} total={pairs.length} />
-                <UpcomingList pairs={pairs} startIndex={index + 1} limit={2} />
-              </>
-            )}
-          </div>
-        )}
-      </main>
-      {deck && (
+      </CsvFileInput>
+      {activeDeck && (
         <PlayerBar
           state={state}
           index={index}
@@ -81,8 +120,8 @@ export default function App() {
         onJaToEnMsChange={setJaToEnMs}
         betweenRowsMs={betweenRowsMs}
         onBetweenRowsMsChange={setBetweenRowsMs}
-        hasDeck={!!deck}
-        onClearDeck={clear}
+        hasDecks={library.decks.length > 0}
+        onClearAllDecks={clearAll}
       />
       <Toaster position="top-center" richColors closeButton />
     </div>
