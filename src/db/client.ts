@@ -3,12 +3,15 @@ import { Pool } from "@neondatabase/serverless";
 import { drizzle, type NeonDatabase } from "drizzle-orm/neon-serverless";
 import * as schema from "./schema";
 
-type DB = NeonDatabase<typeof schema>;
+export type DB = NeonDatabase<typeof schema>;
 
-let _db: DB | null = null;
+// Use globalThis to survive Next.js dev HMR module re-evaluation.
+// In production each isolate gets a fresh globalThis; this only affects dev.
+const globalForDb = globalThis as unknown as { _db?: DB };
 
 export function getDb(): DB {
-  if (_db) return _db;
+  if (globalForDb._db) return globalForDb._db;
+  // Only the pooled URL is consumed at runtime; drizzle-kit uses UNPOOLED.
   const url = process.env.DATABASE_URL;
   if (!url) {
     throw new Error(
@@ -16,6 +19,6 @@ export function getDb(): DB {
     );
   }
   const pool = new Pool({ connectionString: url });
-  _db = drizzle(pool, { schema });
-  return _db;
+  globalForDb._db = drizzle(pool, { schema });
+  return globalForDb._db;
 }
