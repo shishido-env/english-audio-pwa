@@ -124,13 +124,17 @@ describe("createDeckFromCsv", () => {
       name: "new_deck",
       importedAt: new Date(),
     };
+    const valuesCalls: unknown[] = [];
     const txMock = {
       insert: vi.fn().mockImplementation(() => ({
-        values: vi.fn().mockImplementation((vals: unknown) => ({
-          returning: vi.fn().mockResolvedValue(
-            Array.isArray(vals) ? vals : [insertedDeck],
-          ),
-        })),
+        values: vi.fn().mockImplementation((vals: unknown) => {
+          valuesCalls.push(vals);
+          return {
+            returning: vi.fn().mockResolvedValue(
+              Array.isArray(vals) ? vals : [insertedDeck],
+            ),
+          };
+        }),
       })),
     };
     const dbMock = {
@@ -148,7 +152,28 @@ describe("createDeckFromCsv", () => {
     });
     expect(res.ok).toBe(true);
     expect(dbMock.transaction).toHaveBeenCalledTimes(1);
-    expect(txMock.insert).toHaveBeenCalledTimes(2); // 1 deck + 1 cards-bulk
+    expect(txMock.insert).toHaveBeenCalledTimes(2);
+    expect(valuesCalls[0]).toMatchObject({
+      userId: "user_test_123",
+      name: "new_deck",
+    });
+    expect(valuesCalls[1]).toEqual([
+      { deckId: "new-deck-uuid", ja: "あ", en: "A", position: 0 },
+      { deckId: "new-deck-uuid", ja: "い", en: "I", position: 1 },
+    ]);
     expect(mockRevalidatePath).toHaveBeenCalledWith("/decks");
+  });
+
+  it("transaction が失敗したら insert_failed を返す", async () => {
+    const dbMock = {
+      transaction: vi.fn().mockRejectedValue(new Error("db down")),
+    };
+    mockGetDb.mockReturnValueOnce(dbMock);
+    const res = await createDeckFromCsv({
+      name: "x",
+      pairs: [{ ja: "あ", en: "A" }],
+    });
+    expect(res).toEqual({ ok: false, error: "insert_failed" });
+    expect(mockRevalidatePath).not.toHaveBeenCalled();
   });
 });

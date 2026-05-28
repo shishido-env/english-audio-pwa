@@ -7,10 +7,7 @@ import { z } from "zod";
 import { getDb } from "@/db/client";
 import { decks, cards } from "@/db/schema";
 import type { Library, Pair } from "@/types";
-
-export type Result<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: string };
+import type { Result } from "./types";
 
 export async function getLibrary(): Promise<Result<Library>> {
   const { userId } = await auth();
@@ -46,7 +43,7 @@ export async function getLibrary(): Promise<Result<Library>> {
 }
 
 const createDeckSchema = z.object({
-  name: z.string().min(1).transform((s) => s.trim()).refine((s) => s.length > 0),
+  name: z.string().trim().min(1),
   pairs: z
     .array(z.object({ ja: z.string(), en: z.string() }))
     .min(1),
@@ -65,26 +62,31 @@ export async function createDeckFromCsv(input: {
   const db = getDb();
   const importedAt = new Date();
 
-  const result = await db.transaction(async (tx) => {
-    const inserted = await tx
-      .insert(decks)
-      .values({
-        userId,
-        name: parsed.data.name,
-        importedAt,
-      })
-      .returning();
-    const deck = inserted[0];
-    if (!deck) throw new Error("insert_failed");
-    const cardRows = parsed.data.pairs.map((p, i) => ({
-      deckId: deck.id,
-      ja: p.ja,
-      en: p.en,
-      position: i,
-    }));
-    await tx.insert(cards).values(cardRows).returning();
-    return { id: deck.id };
-  });
+  let result: { id: string };
+  try {
+    result = await db.transaction(async (tx) => {
+      const inserted = await tx
+        .insert(decks)
+        .values({
+          userId,
+          name: parsed.data.name,
+          importedAt,
+        })
+        .returning();
+      const deck = inserted[0];
+      if (!deck) throw new Error("insert_failed");
+      const cardRows = parsed.data.pairs.map((p, i) => ({
+        deckId: deck.id,
+        ja: p.ja,
+        en: p.en,
+        position: i,
+      }));
+      await tx.insert(cards).values(cardRows).returning();
+      return { id: deck.id };
+    });
+  } catch {
+    return { ok: false, error: "insert_failed" };
+  }
 
   revalidatePath("/decks");
   return { ok: true, data: result };
