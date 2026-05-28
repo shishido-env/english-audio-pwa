@@ -8,16 +8,12 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     const db = getDb();
-    const result = await db.execute(sql`SELECT 1 as ok`);
-    return NextResponse.json({
-      ok: true,
-      db: "reachable",
-      rows: result.rows ?? result,
-    });
+    await db.execute(sql`SELECT 1 as ok`);
+    return NextResponse.json({ ok: true, db: "reachable" });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    console.error("[/api/health] db unreachable", err);
     return NextResponse.json(
-      { ok: false, error: message },
+      { ok: false, error: "db_unreachable" },
       { status: 503 },
     );
   }
