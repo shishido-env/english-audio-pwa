@@ -17,9 +17,7 @@ export const decks = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
-  (table) => ({
-    userIdIdx: index("decks_user_id_idx").on(table.userId),
-  }),
+  (table) => [index("decks_user_id_idx").on(table.userId)],
 );
 
 export const cards = pgTable(
@@ -33,9 +31,7 @@ export const cards = pgTable(
     en: text("en").notNull(),
     position: integer("position").notNull(),
   },
-  (table) => ({
-    deckIdIdx: index("cards_deck_id_idx").on(table.deckId),
-  }),
+  (table) => [index("cards_deck_id_idx").on(table.deckId)],
 );
 
 export const reviewHistory = pgTable(
@@ -49,12 +45,9 @@ export const reviewHistory = pgTable(
     result: text("result", { enum: ["remembered", "forgot"] }).notNull(),
     reviewedAt: timestamp("reviewed_at").notNull().defaultNow(),
   },
-  (table) => ({
-    userCardIdx: index("review_history_user_card_idx").on(
-      table.userId,
-      table.cardId,
-    ),
-  }),
+  (table) => [
+    index("review_history_user_card_idx").on(table.userId, table.cardId),
+  ],
 );
 
 export type Deck = typeof decks.$inferSelect;

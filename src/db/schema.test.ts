@@ -40,4 +40,19 @@ describe("db/schema", () => {
     expect(col?.notNull).toBe(true);
     expect(cfg.foreignKeys.length).toBeGreaterThan(0);
   });
+
+  it("review_history.card_id は notNull かつ FK 設定あり", () => {
+    const cfg = getTableConfig(reviewHistory);
+    const col = cfg.columns.find((c) => c.name === "card_id");
+    expect(col?.notNull).toBe(true);
+    expect(cfg.foreignKeys.length).toBeGreaterThan(0);
+  });
+
+  it("review_history.result は remembered/forgot の enum", () => {
+    const cfg = getTableConfig(reviewHistory);
+    const col = cfg.columns.find((c) => c.name === "result");
+    // drizzle PgText exposes enumValues for text-with-enum columns
+    const enumValues = (col as unknown as { enumValues?: string[] }).enumValues;
+    expect(enumValues).toEqual(["remembered", "forgot"]);
+  });
 });
