@@ -1,7 +1,8 @@
 # サブプロジェクト1: 認証 + クラウド同期基盤 設計
 
 - 作成日: 2026-05-28
-- ステータス: ドラフト（ユーザーレビュー待ち）
+- ステータス: 実装進行中（F1 完了 / F2 着手）
+- 最終更新: 2026-05-28
 - 親ロードマップ: `docs/superpowers/specs/2026-05-28-roadmap.md`
 - 前提: 完全無料、AIのみで開発、個人利用専用、Vercel エコシステム最大活用
 
@@ -203,15 +204,15 @@ drizzle.config.ts           Drizzle Kit 設定
 
 各フェーズは独立した PR。F2 までで「Next.js 版で既存機能が動く」、F4 までで「ログインできる」、F6 までで「マルチデバイス同期が動く」状態を達成。
 
-| フェーズ | ブランチ案 | 内容 | 完了基準 |
-|---|---|---|---|
-| F1 | `feat/migrate-next` | Next.js 15 App Router 初期化。`vite.config.ts`, `index.html` 削除。`tsconfig.json` 更新 | `pnpm next build` 成功 |
-| F2 | `feat/migrate-components` | components / hooks / lib を新ディレクトリへ移植。Tailwind v4 / shadcn/ui を Next.js 上で再構成 | 読み上げモードがデモCSVで動作。既存テスト緑 |
-| F3 | `feat/pwa-serwist` | Serwist 導入。manifest.json / アイコン移植 | Lighthouse PWA 監査合格、オフラインでアプリシェル起動 |
-| F4 | `feat/clerk-auth` | Clerk セットアップ。サインイン/サインアップページ。`middleware.ts` でルート保護 | サインインして `/decks` にアクセス可能 |
-| F5 | `feat/db-schema` | Neon プロジェクト作成（Vercel Marketplace）。Drizzle スキーマ＋マイグレーション | `drizzle-kit push` 成功、Vercel Preview で接続確認 |
-| F6 | `feat/db-sync` | `useLibrary` を Server Actions に置換。localStorage キャッシュ層実装 | 別端末からサインインして同じデッキが見える |
-| F7 | `chore/test-update` | 既存テストを DB / Server Actions 対応に更新。新規 actions のテスト追加。README に初回セットアップ手順追記 | 全テスト緑、README 更新済み |
+| フェーズ | ブランチ案 | 内容 | 完了基準 | 状態 |
+|---|---|---|---|---|
+| F1 | `feat/migrate-next` | Next.js 15 App Router 初期化。`vite.config.ts`, `index.html` 削除。`tsconfig.json` 更新 | `pnpm next build` 成功 | ✅ 完了（2026-05-28、ローカル検証緑、未 push） |
+| F2 | `feat/migrate-next`（継続） | components / hooks / lib を新ディレクトリへ移植。Tailwind v4 / shadcn/ui を Next.js 上で再構成 | 読み上げモードがデモCSVで動作。既存テスト緑 | 🔄 着手中 |
+| F3 | `feat/pwa-serwist` | Serwist 導入。manifest.json / アイコン移植 | Lighthouse PWA 監査合格、オフラインでアプリシェル起動 | ⏳ 未着手 |
+| F4 | `feat/clerk-auth` | Clerk セットアップ。サインイン/サインアップページ。`middleware.ts` でルート保護 | サインインして `/decks` にアクセス可能 | ⏳ 未着手 |
+| F5 | `feat/db-schema` | Neon プロジェクト作成（Vercel Marketplace）。Drizzle スキーマ＋マイグレーション | `drizzle-kit push` 成功、Vercel Preview で接続確認 | ⏳ 未着手 |
+| F6 | `feat/db-sync` | `useLibrary` を Server Actions に置換。localStorage キャッシュ層実装 | 別端末からサインインして同じデッキが見える | ⏳ 未着手 |
+| F7 | `chore/test-update` | 既存テストを DB / Server Actions 対応に更新。新規 actions のテスト追加。README に初回セットアップ手順追記 | 全テスト緑、README 更新済み | ⏳ 未着手 |
 
 各フェーズ完了時に master へマージし、Vercel Preview / Production で動作確認する。
 
