@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import { Headphones, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Deck } from "@/types";
@@ -53,6 +54,7 @@ export function AppHeader({
         >
           <Settings className="size-5" />
         </Button>
+        <UserButton />
       </div>
     </header>
   );
