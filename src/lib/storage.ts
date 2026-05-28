@@ -1,4 +1,4 @@
-import { LIBRARY_STORAGE_KEY, STORAGE_KEY } from "@/config";
+import { LIBRARY_STORAGE_KEY, STORAGE_KEY, ACTIVE_ID_STORAGE_KEY } from "@/config";
 import type { Deck, Library } from "@/types";
 
 const EMPTY: Library = { decks: [], activeId: null };
@@ -80,4 +80,17 @@ export function saveLibrary(library: Library): void {
 
 export function clearLibrary(): void {
   localStorage.removeItem(LIBRARY_STORAGE_KEY);
+}
+
+export function loadActiveId(): string | null {
+  const v = localStorage.getItem(ACTIVE_ID_STORAGE_KEY);
+  return v && v.length > 0 ? v : null;
+}
+
+export function saveActiveId(id: string | null): void {
+  if (id === null) {
+    localStorage.removeItem(ACTIVE_ID_STORAGE_KEY);
+  } else {
+    localStorage.setItem(ACTIVE_ID_STORAGE_KEY, id);
+  }
 }

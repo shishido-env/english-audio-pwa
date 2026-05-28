@@ -1,111 +1,175 @@
+import "@/test/library-action-mocks";
 import { describe, it, expect, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
+import {
+  mockGetLibrary,
+  mockCreateDeckFromCsv,
+  mockRenameDeck,
+  mockRemoveDeck,
+  mockClearAllDecks,
+  resetLibraryActionMocks,
+} from "@/test/library-action-mocks";
 import { useLibrary } from "./useLibrary";
 
 describe("useLibrary", () => {
   beforeEach(() => {
     localStorage.clear();
+    resetLibraryActionMocks();
   });
 
-  it("初期状態は空", () => {
+  it("初期状態は空 (キャッシュなし)", async () => {
     const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.library.decks).toEqual([]);
     expect(result.current.activeDeck).toBeNull();
   });
 
-  it("importCsv で新デッキが追加されアクティブになる", async () => {
-    const { result } = renderHook(() => useLibrary());
-    await act(async () => {
-      await result.current.importCsv("a.csv", "おはよう,Good morning");
+  it("起動時に getLibrary が呼ばれサーバ最新で state が更新される", async () => {
+    mockGetLibrary.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        decks: [
+          {
+            id: "d1",
+            name: "from_server",
+            importedAt: 100,
+            pairs: [{ ja: "あ", en: "A" }],
+          },
+        ],
+        activeId: null,
+      },
     });
-    expect(result.current.library.decks).toHaveLength(1);
+    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
+    expect(result.current.library.decks[0].name).toBe("from_server");
+    expect(mockGetLibrary).toHaveBeenCalledTimes(1);
+  });
+
+  it("importCsv で createDeckFromCsv が呼ばれ再フェッチされる", async () => {
+    mockGetLibrary
+      .mockResolvedValueOnce({ ok: true, data: { decks: [], activeId: null } })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [
+            { id: "new-id", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] },
+          ],
+          activeId: null,
+        },
+      });
+    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.importCsv("a.csv", "あ,A");
+    });
+    expect(mockCreateDeckFromCsv).toHaveBeenCalledWith({
+      name: "a",
+      pairs: [{ ja: "あ", en: "A" }],
+    });
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
     expect(result.current.activeDeck?.name).toBe("a");
-    expect(result.current.library.activeId).toBe(result.current.activeDeck?.id);
+    expect(result.current.library.activeId).toBe("new-id");
   });
 
-  it("importCsv を2回呼ぶと両方のデッキが残る", async () => {
+  it("selectDeck はクライアントのみで activeId を切替", async () => {
+    mockGetLibrary.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        decks: [
+          { id: "d1", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] },
+          { id: "d2", name: "b", importedAt: 2, pairs: [{ ja: "い", en: "I" }] },
+        ],
+        activeId: null,
+      },
+    });
     const { result } = renderHook(() => useLibrary());
-    await act(async () => {
-      await result.current.importCsv("a.csv", "おはよう,Good morning");
-    });
-    await act(async () => {
-      await result.current.importCsv("b.csv", "こんにちは,Hello");
-    });
-    expect(result.current.library.decks).toHaveLength(2);
-    expect(result.current.activeDeck?.name).toBe("b");
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(2));
+    act(() => result.current.selectDeck("d1"));
+    expect(result.current.activeDeck?.id).toBe("d1");
+    expect(result.current.library.activeId).toBe("d1");
+    expect(localStorage.getItem("english-audio-pwa:active-deck-id")).toBe("d1");
   });
 
-  it("selectDeck でアクティブを切替", async () => {
+  it("renameDeck で renameDeck action が呼ばれ再フェッチされる", async () => {
+    mockGetLibrary
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [{ id: "d1", name: "old", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] }],
+          activeId: null,
+        },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [{ id: "d1", name: "new", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] }],
+          activeId: null,
+        },
+      });
     const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
     await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
-      await result.current.importCsv("b.csv", "い,B");
+      await result.current.renameDeck("d1", "  new  ");
     });
-    const firstId = result.current.library.decks[0].id;
-    act(() => result.current.selectDeck(firstId));
-    expect(result.current.activeDeck?.id).toBe(firstId);
+    expect(mockRenameDeck).toHaveBeenCalledWith({ id: "d1", name: "  new  " });
+    await waitFor(() => expect(result.current.library.decks[0].name).toBe("new"));
   });
 
-  it("renameDeck で名前変更", async () => {
+  it("removeDeck で removeDeck action が呼ばれ再フェッチされる", async () => {
+    mockGetLibrary
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [
+            { id: "d1", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] },
+            { id: "d2", name: "b", importedAt: 2, pairs: [{ ja: "い", en: "I" }] },
+          ],
+          activeId: null,
+        },
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [{ id: "d2", name: "b", importedAt: 2, pairs: [{ ja: "い", en: "I" }] }],
+          activeId: null,
+        },
+      });
     const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(2));
     await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
+      await result.current.removeDeck("d1");
     });
-    const id = result.current.library.decks[0].id;
-    act(() => result.current.renameDeck(id, "  新しい名前  "));
-    expect(result.current.activeDeck?.name).toBe("新しい名前");
+    expect(mockRemoveDeck).toHaveBeenCalledWith({ id: "d1" });
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
   });
 
-  it("renameDeck で空文字は無視される", async () => {
+  it("clearAll で clearAllDecks action が呼ばれ再フェッチされる", async () => {
+    mockGetLibrary
+      .mockResolvedValueOnce({
+        ok: true,
+        data: {
+          decks: [{ id: "d1", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] }],
+          activeId: null,
+        },
+      })
+      .mockResolvedValueOnce({ ok: true, data: { decks: [], activeId: null } });
     const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
     await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
+      await result.current.clearAll();
     });
-    const id = result.current.library.decks[0].id;
-    act(() => result.current.renameDeck(id, "   "));
-    expect(result.current.activeDeck?.name).toBe("a");
+    expect(mockClearAllDecks).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(result.current.library.decks).toEqual([]));
   });
 
-  it("removeDeck でアクティブを削除すると別デッキがアクティブになる", async () => {
+  it("空CSVは throw する（サーバ呼出前にバリデーション失敗）", async () => {
     const { result } = renderHook(() => useLibrary());
-    await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
-      await result.current.importCsv("b.csv", "い,B");
-    });
-    const activeId = result.current.library.activeId!;
-    act(() => result.current.removeDeck(activeId));
-    expect(result.current.library.decks).toHaveLength(1);
-    expect(result.current.activeDeck).not.toBeNull();
-    expect(result.current.activeDeck?.id).not.toBe(activeId);
-  });
-
-  it("最後の1個を removeDeck すると activeId は null", async () => {
-    const { result } = renderHook(() => useLibrary());
-    await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
-    });
-    const id = result.current.library.activeId!;
-    act(() => result.current.removeDeck(id));
-    expect(result.current.activeDeck).toBeNull();
-    expect(result.current.library.activeId).toBeNull();
-  });
-
-  it("空CSVは throw する", async () => {
-    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
     await expect(
       act(async () => {
         await result.current.importCsv("empty.csv", "");
       }),
     ).rejects.toThrow();
-  });
-
-  it("clearAll で全消去される", async () => {
-    const { result } = renderHook(() => useLibrary());
-    await act(async () => {
-      await result.current.importCsv("a.csv", "あ,A");
-    });
-    act(() => result.current.clearAll());
-    expect(result.current.library.decks).toEqual([]);
-    expect(result.current.activeDeck).toBeNull();
+    expect(mockCreateDeckFromCsv).not.toHaveBeenCalled();
   });
 });
