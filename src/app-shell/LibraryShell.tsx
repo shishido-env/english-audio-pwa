@@ -21,6 +21,7 @@ export function LibraryShell() {
   const {
     library,
     activeDeck,
+    isLoading,
     importCsv,
     selectDeck,
     renameDeck,
@@ -73,7 +74,12 @@ export function LibraryShell() {
               onOpenSettings={() => setSettingsOpen(true)}
             />
             <main className="pb-36">
-              {!activeDeck && <EmptyState onPickFile={open} />}
+              {isLoading && library.decks.length === 0 && (
+                <div className="mx-auto max-w-5xl px-4 pt-10 text-center text-sm text-muted-foreground">
+                  デッキを読み込み中...
+                </div>
+              )}
+              {!isLoading && !activeDeck && <EmptyState onPickFile={open} />}
               {activeDeck && (
                 <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 md:pt-8">
                   <div className="grid gap-6 lg:grid-cols-2 lg:gap-10">
