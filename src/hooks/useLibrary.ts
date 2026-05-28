@@ -3,19 +3,16 @@ import type { Deck, Library } from "@/types";
 import { parseCsv } from "@/lib/csv";
 import { createDeckId, loadLibrary, saveLibrary } from "@/lib/storage";
 
+const EMPTY_LIBRARY: Library = { decks: [], activeId: null };
+
 function stripExtension(filename: string): string {
   return filename.replace(/\.[^.]+$/, "");
 }
 
 export function useLibrary() {
-  const [library, setLibrary] = useState<Library>({
-    decks: [],
-    activeId: null,
-  });
-
-  useEffect(() => {
-    setLibrary(loadLibrary());
-  }, []);
+  const [library, setLibrary] = useState<Library>(() =>
+    typeof window === "undefined" ? EMPTY_LIBRARY : loadLibrary(),
+  );
 
   useEffect(() => {
     saveLibrary(library);
