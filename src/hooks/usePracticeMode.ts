@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 import type { VoiceMode } from "@/types";
 import { PRACTICE_STORAGE_KEY } from "@/config";

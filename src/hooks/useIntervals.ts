@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_SILENCE_BETWEEN_ROWS_MS,

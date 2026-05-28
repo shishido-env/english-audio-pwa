@@ -1,3 +1,5 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
 import type { Deck, Library } from "@/types";
 import { parseCsv } from "@/lib/csv";

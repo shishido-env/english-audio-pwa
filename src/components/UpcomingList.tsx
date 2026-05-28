@@ -1,3 +1,5 @@
+"use client";
+
 import type { Pair } from "@/types";
 
 type Props = {

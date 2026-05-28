@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useCallback } from "react";
 import type { Theme } from "@/types";
 import { THEME_STORAGE_KEY } from "@/config";

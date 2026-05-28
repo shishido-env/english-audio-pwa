@@ -1,3 +1,5 @@
+"use client";
+
 import { Headphones, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Deck } from "@/types";

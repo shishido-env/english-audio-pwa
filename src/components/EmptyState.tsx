@@ -1,3 +1,5 @@
+"use client";
+
 import { FileUp, Headphones, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
