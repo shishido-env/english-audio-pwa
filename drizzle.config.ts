@@ -1,5 +1,11 @@
 import { defineConfig } from "drizzle-kit";
 
+try {
+  process.loadEnvFile(".env.local");
+} catch {
+  // .env.local が無くても CI 等から環境変数を直接渡せるよう握りつぶす
+}
+
 const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
 if (!url) {
   throw new Error(

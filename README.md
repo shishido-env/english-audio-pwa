@@ -62,10 +62,18 @@ DATABASE_URL_UNPOOLED=postgres://...?sslmode=require
 ### 5. DB スキーマを作成
 
 ```bash
-pnpm db:push
+pnpm db:migrate
 ```
 
-`decks` / `cards` / `review_history` テーブルが Neon 側に作成される。スキーマ変更時も同じコマンドで反映可能。
+`drizzle/` 配下のマイグレーション SQL を Neon に適用する（`decks` / `cards` / `review_history` テーブルが作成される）。
+
+スキーマを変更したときは:
+
+1. `pnpm db:generate` でマイグレーション SQL を生成
+2. 差分を確認してコミット
+3. `pnpm db:migrate` で適用
+
+開発初期の試行錯誤段階のみ `pnpm db:push` で直接同期も可（破壊的変更は `--force` が必要）。
 
 ### 6. 開発サーバ起動
 
@@ -102,7 +110,9 @@ pnpm dev
 | `pnpm lint` | ESLint 実行（`next lint` は将来非推奨予定。CI で問題が出たら ESLint CLI へ移行する）|
 | `pnpm test` | Vitest watch |
 | `pnpm test:run` | Vitest 単発実行 |
-| `pnpm db:push` | Drizzle Kit でスキーマを Neon に反映 |
+| `pnpm db:generate` | スキーマ差分からマイグレーション SQL 生成 |
+| `pnpm db:migrate` | `drizzle/` のマイグレーションを適用 |
+| `pnpm db:push` | スキーマを直接同期（試行錯誤用、破壊変更は `--force` 必要）|
 | `pnpm db:studio` | Drizzle Studio 起動（DB ブラウザ）|
 
 ## 技術スタック
