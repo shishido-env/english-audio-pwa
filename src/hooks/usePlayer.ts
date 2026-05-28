@@ -27,7 +27,9 @@ export function usePlayer(
     voiceMode = "both",
   } = options;
   const settingsRef = useRef({ jaToEnMs, betweenRowsMs, voiceMode });
-  settingsRef.current = { jaToEnMs, betweenRowsMs, voiceMode };
+  useEffect(() => {
+    settingsRef.current = { jaToEnMs, betweenRowsMs, voiceMode };
+  }, [jaToEnMs, betweenRowsMs, voiceMode]);
   const [state, setState] = useState<PlayerState>({ kind: "idle" });
   const [index, setIndex] = useState(0);
   const runIdRef = useRef(0);
@@ -102,8 +104,9 @@ export function usePlayer(
   }, []);
 
   useEffect(() => {
+    const runId = runIdRef;
     return () => {
-      runIdRef.current++;
+      runId.current++;
       speech.cancel();
     };
   }, [speech]);
