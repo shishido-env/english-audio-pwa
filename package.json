@@ -13,6 +13,7 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@clerk/nextjs": "^7.4.2",
     "@fontsource-variable/geist": "^5.2.9",
     "@serwist/next": "^9.5.11",
     "class-variance-authority": "^0.7.1",
