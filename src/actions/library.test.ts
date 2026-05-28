@@ -1,7 +1,7 @@
 import "@/test/action-mocks";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { mockAuth, mockGetDb, mockRevalidatePath, resetActionMocks } from "@/test/action-mocks";
-import { getLibrary, createDeckFromCsv } from "./library";
+import { getLibrary, createDeckFromCsv, renameDeck, removeDeck, clearAllDecks } from "./library";
 
 describe("getLibrary", () => {
   beforeEach(() => {
@@ -175,5 +175,78 @@ describe("createDeckFromCsv", () => {
     });
     expect(res).toEqual({ ok: false, error: "insert_failed" });
     expect(mockRevalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+describe("renameDeck", () => {
+  beforeEach(() => resetActionMocks());
+
+  it("未認証は unauthorized", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: null });
+    const res = await renameDeck({ id: "d1", name: "x" });
+    expect(res).toEqual({ ok: false, error: "unauthorized" });
+  });
+
+  it("空名は invalid_input", async () => {
+    const res = await renameDeck({ id: "d1", name: "  " });
+    expect(res).toEqual({ ok: false, error: "invalid_input" });
+  });
+
+  it("成功時に update + revalidate を呼ぶ", async () => {
+    const updateChain = {
+      set: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockResolvedValue(undefined),
+      })),
+    };
+    const dbMock = {
+      update: vi.fn().mockReturnValue(updateChain),
+    };
+    mockGetDb.mockReturnValueOnce(dbMock);
+    const res = await renameDeck({ id: "11111111-1111-4111-8111-111111111111", name: "  新名  " });
+    expect(res).toEqual({ ok: true, data: null });
+    expect(updateChain.set).toHaveBeenCalledWith(
+      expect.objectContaining({ name: "新名" }),
+    );
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/decks");
+  });
+});
+
+describe("removeDeck", () => {
+  beforeEach(() => resetActionMocks());
+
+  it("未認証は unauthorized", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: null });
+    const res = await removeDeck({ id: "d1" });
+    expect(res).toEqual({ ok: false, error: "unauthorized" });
+  });
+
+  it("成功時に delete + revalidate を呼ぶ", async () => {
+    const deleteChain = { where: vi.fn().mockResolvedValue(undefined) };
+    const dbMock = { delete: vi.fn().mockReturnValue(deleteChain) };
+    mockGetDb.mockReturnValueOnce(dbMock);
+    const res = await removeDeck({ id: "11111111-1111-4111-8111-111111111111" });
+    expect(res).toEqual({ ok: true, data: null });
+    expect(dbMock.delete).toHaveBeenCalledTimes(1);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/decks");
+  });
+});
+
+describe("clearAllDecks", () => {
+  beforeEach(() => resetActionMocks());
+
+  it("未認証は unauthorized", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: null });
+    const res = await clearAllDecks();
+    expect(res).toEqual({ ok: false, error: "unauthorized" });
+  });
+
+  it("成功時に delete(eq(userId)) + revalidate を呼ぶ", async () => {
+    const deleteChain = { where: vi.fn().mockResolvedValue(undefined) };
+    const dbMock = { delete: vi.fn().mockReturnValue(deleteChain) };
+    mockGetDb.mockReturnValueOnce(dbMock);
+    const res = await clearAllDecks();
+    expect(res).toEqual({ ok: true, data: null });
+    expect(dbMock.delete).toHaveBeenCalledTimes(1);
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/decks");
   });
 });

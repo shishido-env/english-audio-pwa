@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getDb } from "@/db/client";
@@ -90,4 +90,60 @@ export async function createDeckFromCsv(input: {
 
   revalidatePath("/decks");
   return { ok: true, data: result };
+}
+
+const renameSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().trim().min(1),
+});
+
+export async function renameDeck(input: {
+  id: string;
+  name: string;
+}): Promise<Result<null>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "unauthorized" };
+
+  const parsed = renameSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid_input" };
+
+  const db = getDb();
+  await db
+    .update(decks)
+    .set({ name: parsed.data.name, updatedAt: new Date() })
+    .where(and(eq(decks.id, parsed.data.id), eq(decks.userId, userId)));
+
+  revalidatePath("/decks");
+  return { ok: true, data: null };
+}
+
+const removeSchema = z.object({
+  id: z.string().uuid(),
+});
+
+export async function removeDeck(input: { id: string }): Promise<Result<null>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "unauthorized" };
+
+  const parsed = removeSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: "invalid_input" };
+
+  const db = getDb();
+  await db
+    .delete(decks)
+    .where(and(eq(decks.id, parsed.data.id), eq(decks.userId, userId)));
+
+  revalidatePath("/decks");
+  return { ok: true, data: null };
+}
+
+export async function clearAllDecks(): Promise<Result<null>> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "unauthorized" };
+
+  const db = getDb();
+  await db.delete(decks).where(eq(decks.userId, userId));
+
+  revalidatePath("/decks");
+  return { ok: true, data: null };
 }
