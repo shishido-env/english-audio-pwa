@@ -1,3 +1,4 @@
+import { relations } from "drizzle-orm";
 import {
   pgTable,
   uuid,
@@ -56,3 +57,21 @@ export type Card = typeof cards.$inferSelect;
 export type NewCard = typeof cards.$inferInsert;
 export type ReviewHistory = typeof reviewHistory.$inferSelect;
 export type NewReviewHistory = typeof reviewHistory.$inferInsert;
+
+export const decksRelations = relations(decks, ({ many }) => ({
+  cards: many(cards),
+}));
+
+export const cardsRelations = relations(cards, ({ one }) => ({
+  deck: one(decks, {
+    fields: [cards.deckId],
+    references: [decks.id],
+  }),
+}));
+
+export const reviewHistoryRelations = relations(reviewHistory, ({ one }) => ({
+  card: one(cards, {
+    fields: [reviewHistory.cardId],
+    references: [cards.id],
+  }),
+}));
