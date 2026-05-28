@@ -1,5 +1,5 @@
 import "@/test/library-action-mocks";
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import {
   mockGetLibrary,
@@ -10,6 +10,11 @@ import {
   resetLibraryActionMocks,
 } from "@/test/library-action-mocks";
 import { useLibrary } from "./useLibrary";
+
+const { mockToastError } = vi.hoisted(() => ({ mockToastError: vi.fn() }));
+vi.mock("sonner", () => ({
+  toast: { error: mockToastError, success: vi.fn() },
+}));
 
 describe("useLibrary", () => {
   beforeEach(() => {
@@ -203,6 +208,62 @@ describe("useLibrary", () => {
     });
     // 上書きされていないこと
     expect(result.current.library.decks.map((d) => d.id)).toEqual(["d2"]);
+  });
+
+  it("renameDeck が失敗するとエラー toast が出る", async () => {
+    mockGetLibrary.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        decks: [{ id: "d1", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] }],
+        activeId: null,
+      },
+    });
+    mockRenameDeck.mockResolvedValueOnce({ ok: false, error: "not_found" });
+    mockToastError.mockClear();
+    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
+    await act(async () => {
+      await result.current.renameDeck("d1", "new");
+    });
+    expect(mockToastError).toHaveBeenCalledTimes(1);
+    expect(mockToastError).toHaveBeenCalledWith(
+      expect.stringContaining("名称変更"),
+    );
+  });
+
+  it("removeDeck が失敗するとエラー toast が出る", async () => {
+    mockGetLibrary.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        decks: [{ id: "d1", name: "a", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] }],
+        activeId: null,
+      },
+    });
+    mockRemoveDeck.mockResolvedValueOnce({ ok: false, error: "not_found" });
+    mockToastError.mockClear();
+    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.library.decks).toHaveLength(1));
+    await act(async () => {
+      await result.current.removeDeck("d1");
+    });
+    expect(mockToastError).toHaveBeenCalledTimes(1);
+    expect(mockToastError).toHaveBeenCalledWith(
+      expect.stringContaining("削除"),
+    );
+  });
+
+  it("clearAll が失敗するとエラー toast が出る", async () => {
+    mockClearAllDecks.mockResolvedValueOnce({ ok: false, error: "unauthorized" });
+    mockToastError.mockClear();
+    const { result } = renderHook(() => useLibrary());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.clearAll();
+    });
+    expect(mockToastError).toHaveBeenCalledTimes(1);
+    expect(mockToastError).toHaveBeenCalledWith(
+      expect.stringContaining("全削除"),
+    );
   });
 
   it("空CSVは throw する（サーバ呼出前にバリデーション失敗）", async () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import type { Deck, Library } from "@/types";
 import { parseCsv } from "@/lib/csv";
 import {
@@ -98,7 +99,10 @@ export function useLibrary() {
       const trimmed = name.trim();
       if (trimmed === "") return;
       const res = await renameDeckAction({ id, name });
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error("デッキの名称変更に失敗しました");
+        return;
+      }
       await refetch();
     },
     [refetch],
@@ -107,7 +111,10 @@ export function useLibrary() {
   const removeDeck = useCallback(
     async (id: string) => {
       const res = await removeDeckAction({ id });
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error("デッキの削除に失敗しました");
+        return;
+      }
       const wasActive = library.activeId === id;
       await refetch();
       if (wasActive) {
@@ -123,7 +130,10 @@ export function useLibrary() {
 
   const clearAll = useCallback(async () => {
     const res = await clearAllDecks();
-    if (!res.ok) return;
+    if (!res.ok) {
+      toast.error("デッキの全削除に失敗しました");
+      return;
+    }
     if (typeof window !== "undefined") saveActiveId(null);
     await refetch();
   }, [refetch]);
