@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Deck, Library } from "@/types";
 import { parseCsv } from "@/lib/csv";
 import {
@@ -40,9 +40,12 @@ export function useLibrary() {
     return mergeActiveId(cached, activeId);
   });
   const [isLoading, setIsLoading] = useState(true);
+  const requestIdRef = useRef(0);
 
   const refetch = useCallback(async () => {
+    const myId = ++requestIdRef.current;
     const res = await getLibrary();
+    if (myId !== requestIdRef.current) return;
     if (!res.ok) {
       setIsLoading(false);
       return;

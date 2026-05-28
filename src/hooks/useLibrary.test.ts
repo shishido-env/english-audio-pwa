@@ -162,6 +162,49 @@ describe("useLibrary", () => {
     await waitFor(() => expect(result.current.library.decks).toEqual([]));
   });
 
+  it("古い refetch は新しい refetch の結果を上書きしない", async () => {
+    let resolveFirst!: (v: { ok: true; data: import("@/types").Library }) => void;
+    const firstPromise = new Promise<{ ok: true; data: import("@/types").Library }>(
+      (resolve) => {
+        resolveFirst = resolve;
+      },
+    );
+    mockGetLibrary.mockReturnValueOnce(firstPromise);
+    mockGetLibrary.mockResolvedValueOnce({
+      ok: true,
+      data: {
+        decks: [
+          { id: "d2", name: "newer", importedAt: 2, pairs: [{ ja: "い", en: "I" }] },
+        ],
+        activeId: null,
+      },
+    });
+    const { result } = renderHook(() => useLibrary());
+    // 2 回目の refetch を rename 経由で発火（mockRenameDeck は success デフォルト）
+    await act(async () => {
+      await result.current.renameDeck("dummy", "x");
+    });
+    // 2 回目の結果が反映されている
+    await waitFor(() =>
+      expect(result.current.library.decks.map((d) => d.id)).toEqual(["d2"]),
+    );
+    // 古い refetch を後から解決させる
+    await act(async () => {
+      resolveFirst({
+        ok: true,
+        data: {
+          decks: [
+            { id: "d1", name: "older", importedAt: 1, pairs: [{ ja: "あ", en: "A" }] },
+          ],
+          activeId: null,
+        },
+      });
+      await firstPromise;
+    });
+    // 上書きされていないこと
+    expect(result.current.library.decks.map((d) => d.id)).toEqual(["d2"]);
+  });
+
   it("空CSVは throw する（サーバ呼出前にバリデーション失敗）", async () => {
     const { result } = renderHook(() => useLibrary());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
