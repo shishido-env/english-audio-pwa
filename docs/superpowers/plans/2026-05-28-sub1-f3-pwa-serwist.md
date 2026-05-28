@@ -33,14 +33,14 @@
 **Files:**
 - Modify: `package.json`, `pnpm-lock.yaml`
 
-- [ ] **Step 1: @serwist/next と serwist をインストール**
+- [x] **Step 1: @serwist/next と serwist をインストール**
 
 ```bash
 pnpm add @serwist/next
 pnpm add -D serwist
 ```
 
-- [ ] **Step 2: バージョンと整合性確認**
+- [x] **Step 2: バージョンと整合性確認**
 
 ```bash
 cat package.json | grep -E '"@serwist|"serwist'
@@ -48,7 +48,7 @@ cat package.json | grep -E '"@serwist|"serwist'
 
 期待: `@serwist/next` が `dependencies`、`serwist` が `devDependencies` に入っている。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add package.json pnpm-lock.yaml
@@ -62,7 +62,7 @@ git commit -m "chore(f3): install @serwist/next and serwist"
 **Files:**
 - Modify: `tsconfig.json`
 
-- [ ] **Step 1: types と lib に Serwist 用エントリ追加、exclude に sw.js 追加**
+- [x] **Step 1: types と lib に Serwist 用エントリ追加、exclude に sw.js 追加**
 
 既存 `tsconfig.json` を以下のように更新:
 
@@ -101,7 +101,7 @@ git commit -m "chore(f3): install @serwist/next and serwist"
 - `compilerOptions` に `"types": ["@serwist/next/typings"]` を追加
 - `exclude` に `"public/sw.js"` を追加（ビルド時に生成される、TS 対象から除外）
 
-- [ ] **Step 2: typecheck で破綻していないこと確認**
+- [x] **Step 2: typecheck で破綻していないこと確認**
 
 ```bash
 pnpm typecheck
@@ -109,7 +109,7 @@ pnpm typecheck
 
 期待: PASS（sw.ts まだ無いが、include パターンに該当しないので OK）。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add tsconfig.json
@@ -123,7 +123,7 @@ git commit -m "chore(f3): add serwist typings and webworker lib"
 **Files:**
 - Create: `app/sw.ts`
 
-- [ ] **Step 1: 以下の内容で新規作成**
+- [x] **Step 1: 以下の内容で新規作成**
 
 ```ts
 import { defaultCache } from "@serwist/next/worker";
@@ -159,7 +159,7 @@ const serwist = new Serwist({
 serwist.addEventListeners();
 ```
 
-- [ ] **Step 2: typecheck**
+- [x] **Step 2: typecheck**
 
 ```bash
 pnpm typecheck
@@ -167,7 +167,7 @@ pnpm typecheck
 
 期待: PASS。`self.__SW_MANIFEST` が `webworker` lib + Serwist typings によって解決される。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add app/sw.ts
@@ -181,7 +181,7 @@ git commit -m "feat(f3): add serwist service worker entry"
 **Files:**
 - Create: `app/~offline/page.tsx`
 
-- [ ] **Step 1: 最小オフラインページを作成**
+- [x] **Step 1: 最小オフラインページを作成**
 
 ```bash
 mkdir -p "app/~offline"
@@ -209,7 +209,7 @@ export default function OfflinePage() {
 }
 ```
 
-- [ ] **Step 2: build で疎通**
+- [x] **Step 2: build で疎通**
 
 ```bash
 pnpm build
@@ -217,7 +217,7 @@ pnpm build
 
 期待: ✓ Compiled successfully、ルートに `/~offline` が増える（4 ルート: `/`, `/_not-found`, `/~offline`、Serwist sw 用エントリ）。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add "app/~offline/page.tsx"
@@ -231,7 +231,7 @@ git commit -m "feat(f3): add minimal offline fallback page"
 **Files:**
 - Modify: `next.config.mjs`
 
-- [ ] **Step 1: 以下に置換**
+- [x] **Step 1: 以下に置換**
 
 ```js
 import { spawnSync } from "node:child_process";
@@ -257,7 +257,7 @@ export default withSerwist(nextConfig);
 
 注: `revision` は `git rev-parse HEAD` の出力を使う。デプロイごとに `sw.js` が更新されることを保証。`trim()` で改行を除去、失敗時は UUID にフォールバック。
 
-- [ ] **Step 2: build で sw.js 生成確認**
+- [x] **Step 2: build で sw.js 生成確認**
 
 ```bash
 pnpm build
@@ -266,7 +266,7 @@ ls -la public/sw.js
 
 期待: `public/sw.js` が生成される（数十KB〜）。`✓ Compiled successfully` も維持。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add next.config.mjs
@@ -280,7 +280,7 @@ git commit -m "feat(f3): wrap next config with withSerwistInit"
 **Files:**
 - Modify: `.gitignore`
 
-- [ ] **Step 1: .gitignore 末尾に追加**
+- [x] **Step 1: .gitignore 末尾に追加**
 
 ```
 # Service Worker (generated)
@@ -289,7 +289,7 @@ public/sw.js.map
 public/swe-worker-*.js
 ```
 
-- [ ] **Step 2: 既に sw.js が tracked 状態なら untrack**
+- [x] **Step 2: 既に sw.js が tracked 状態なら untrack**
 
 ```bash
 git rm --cached public/sw.js public/sw.js.map 2>/dev/null
@@ -297,7 +297,7 @@ git rm --cached public/sw.js public/sw.js.map 2>/dev/null
 
 エラーになるなら（ファイル無いか既に untracked）スキップ。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add .gitignore
@@ -311,7 +311,7 @@ git commit -m "chore(f3): ignore generated service worker artifacts"
 **Files:**
 - Create: `public/manifest.json`
 
-- [ ] **Step 1: 旧 vite.config.ts の manifest 設定を JSON 化**
+- [x] **Step 1: 旧 vite.config.ts の manifest 設定を JSON 化**
 
 ```bash
 git show c932b74:vite.config.ts | grep -A 25 "manifest:"
@@ -340,7 +340,7 @@ git show c932b74:vite.config.ts | grep -A 25 "manifest:"
 
 差分: アイコン URL を `"icon-192.png"` → `"/icon-192.png"` に変更（絶対パス化）。
 
-- [ ] **Step 2: dev でアクセス確認**
+- [x] **Step 2: dev でアクセス確認**
 
 ```bash
 pnpm dev > /tmp/next-dev.log 2>&1 &
@@ -354,7 +354,7 @@ wait 2>/dev/null
 
 期待: それぞれ HTTP 200。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add public/manifest.json
@@ -368,7 +368,7 @@ git commit -m "feat(f3): add web app manifest"
 **Files:**
 - Modify: `app/layout.tsx`
 
-- [ ] **Step 1: metadata と viewport に PWA 用エントリを追加**
+- [x] **Step 1: metadata と viewport に PWA 用エントリを追加**
 
 Next.js 15 では `manifest` と `themeColor` は `Metadata` / `Viewport` API で宣言できる。
 
@@ -425,7 +425,7 @@ export default function RootLayout({
 - `Viewport` 型を import、`export const viewport` を追加
 - `metadata` に `manifest`, `icons` を追加
 
-- [ ] **Step 2: dev で <link rel="manifest"> がレンダリングされること確認**
+- [x] **Step 2: dev で <link rel="manifest"> がレンダリングされること確認**
 
 ```bash
 pnpm dev > /tmp/next-dev.log 2>&1 &
@@ -438,7 +438,7 @@ wait 2>/dev/null
 
 期待: `rel="manifest"` と `content="#7c3aed"` が両方検出される。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add app/layout.tsx
@@ -454,7 +454,7 @@ git commit -m "feat(f3): wire manifest and theme-color in layout metadata"
 
 `app/sw.ts` は webworker globals を使うので、通常の React ルールが噛むと誤検知する可能性がある。
 
-- [ ] **Step 1: globalIgnores に app/sw.ts を追加**
+- [x] **Step 1: globalIgnores に app/sw.ts を追加**
 
 ```js
 // Before
@@ -464,7 +464,7 @@ globalIgnores(['.next', 'dist', 'node_modules']),
 globalIgnores(['.next', 'dist', 'node_modules', 'app/sw.ts', 'public/sw.js']),
 ```
 
-- [ ] **Step 2: lint 確認**
+- [x] **Step 2: lint 確認**
 
 ```bash
 pnpm lint
@@ -472,7 +472,7 @@ pnpm lint
 
 期待: エラー 0、警告 0（既存と同じ）。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add eslint.config.js
@@ -485,7 +485,7 @@ git commit -m "chore(f3): exclude generated and worker files from eslint"
 
 **Files:** なし
 
-- [ ] **Step 1: クリーンインストール + 全チェック**
+- [x] **Step 1: クリーンインストール + 全チェック**
 
 ```bash
 rm -rf node_modules .next public/sw.js public/sw.js.map
@@ -502,7 +502,7 @@ pnpm build
 - test:run 52 tests PASS
 - build PASS、`public/sw.js` 生成、ルートに `/`, `/_not-found`, `/~offline` が含まれる
 
-- [ ] **Step 2: dev で SW 配信と /~offline 疎通**
+- [x] **Step 2: dev で SW 配信と /~offline 疎通**
 
 ```bash
 pnpm dev > /tmp/next-dev.log 2>&1 &
@@ -520,7 +520,7 @@ wait 2>/dev/null
 
 注意: dev では SW が登録モード `register: true` でクライアントに登録される。Chrome DevTools → Application → Service Workers で `sw.js` が active になっていればOK。検証は本タスクの自動確認 + ユーザー側ブラウザ確認の併用。
 
-- [ ] **Step 3: 最終コミット（必要なら）**
+- [x] **Step 3: 最終コミット（必要なら）**
 
 ```bash
 git status
@@ -537,9 +537,9 @@ git commit -m "chore(f3): final cleanup after verification"
 - Modify: `docs/superpowers/plans/2026-05-28-sub1-f3-pwa-serwist.md`
 - Modify: `docs/superpowers/specs/2026-05-28-auth-sync-foundation-design.md`
 
-- [ ] **Step 1: 本 plan の `- [ ]` を `- [x]` に全置換**
+- [x] **Step 1: 本 plan の `- [ ]` を `- [x]` に全置換**
 
-- [ ] **Step 2: 完了レポート章を追加（巻末）**
+- [x] **Step 2: 完了レポート章を追加（巻末）**
 
 以下の情報を記載:
 - 作成コミット数と最終 SHA
@@ -547,11 +547,11 @@ git commit -m "chore(f3): final cleanup after verification"
 - spec から逸脱した点（あれば）
 - F4 への申し送り事項
 
-- [ ] **Step 3: 親 spec のフェーズ表更新**
+- [x] **Step 3: 親 spec のフェーズ表更新**
 
 F3 を「✅ 完了（YYYY-MM-DD）」、F4 を「🔄 次フェーズ」に変更。
 
-- [ ] **Step 4: コミット**
+- [x] **Step 4: コミット**
 
 ```bash
 git add docs/
@@ -562,9 +562,45 @@ git commit -m "docs(f3): mark F3 complete and queue F4"
 
 ## 完了基準（このplan全体）
 
-- [ ] `feat/migrate-next` ブランチ上で全タスクの「完了基準」がチェック済み
-- [ ] `pnpm typecheck` / `pnpm lint` / `pnpm test:run` / `pnpm build` 全て成功
-- [ ] `public/sw.js` が build 時に生成される（`.gitignore` 対象）
-- [ ] `pnpm dev` で `/`, `/~offline`, `/sw.js`, `/manifest.json` がすべて HTTP 200
-- [ ] HTML レンダリング結果に `<link rel="manifest">` と `<meta name="theme-color" content="#7c3aed">` が含まれる
-- [ ] 親 spec のフェーズ表で F3 が完了マーク
+- [x] `feat/migrate-next` ブランチ上で全タスクの「完了基準」がチェック済み
+- [x] `pnpm typecheck` / `pnpm lint` / `pnpm test:run` / `pnpm build` 全て成功
+- [x] `public/sw.js` が build 時に生成される（約 41 KB、`.gitignore` 対象）
+- [x] `pnpm dev` で `/`, `/~offline`, `/sw.js`, `/manifest.json` がすべて HTTP 200
+- [x] HTML レンダリング結果に `<link rel="manifest">` と `<meta name="theme-color" content="#7c3aed">` が含まれる
+- [x] 親 spec のフェーズ表で F3 が完了マーク
+
+---
+
+## 実装完了レポート（2026-05-28）
+
+`feat/migrate-next` 上で F3 計 9 コミット作成。最終検証は全項目 PASS。
+
+**作成コミット（古い順）:**
+
+```
+c5c39e5 chore(f3): install @serwist/next and serwist
+351d9e3 chore(f3): add serwist typings and webworker lib
+81d7253 feat(f3): add serwist service worker entry
+f4f8884 feat(f3): add minimal offline fallback page
+d71436e feat(f3): wrap next config with withSerwistInit
+e7f0284 chore(f3): ignore generated service worker artifacts
+307e4c9 feat(f3): add web app manifest
+289f329 feat(f3): wire manifest and theme-color in layout metadata
+35fca68 chore(f3): exclude generated and worker files from eslint
+```
+
+**検証結果（クリーン再インストール後）:**
+- `pnpm typecheck`: PASS
+- `pnpm lint`: PASS（エラー 0、警告 0）
+- `pnpm test:run`: 7 files / 52 tests PASS
+- `pnpm build`: PASS、`public/sw.js` 約 41 KB を生成、prerendered routes は `/`, `/_not-found`, `/~offline`
+- `pnpm dev` HTTP 200 確認: `/`, `/~offline`, `/sw.js`, `/manifest.json` の 4 つすべて 200
+
+**spec から逸脱した点:**
+- なし。`public/swe-worker-*.js` は Serwist v9 が本体に統合する仕様で生成されないが、念のため `.gitignore` には記載済み（無害）。
+
+**F4 への申し送り事項:**
+- Service Worker は `register: true` デフォルトでクライアント自動登録される。F4 で Clerk 導入時に「サインインページのキャッシュ戦略を NetworkFirst に変更したい」等の細分化が必要になった場合は `app/sw.ts` の `runtimeCaching` をカスタマイズする（現状は `defaultCache` のみ）。
+- 実機ブラウザでの Service Worker 登録・インストール可否・オフライン挙動は手動確認推奨（Chrome DevTools → Application タブ）。本 plan の自動検証は dev サーバの HTTP 応答までで完結。
+- Lighthouse PWA 監査の細項目（splash screen 用 apple-touch アイコン形状、`scope` フィールド等）は範囲外。必要なら F7 の polish フェーズで対処。
+- `public/sw.js` は build 成果物のため `.gitignore` 対象。本番デプロイは Vercel ビルド時に自動生成される前提。
