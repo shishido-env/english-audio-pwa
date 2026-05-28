@@ -1,7 +1,7 @@
 # サブプロジェクト1: 認証 + クラウド同期基盤 設計
 
 - 作成日: 2026-05-28
-- ステータス: 実装進行中（F1〜F5 完了 / F6 次フェーズ）
+- ステータス: 実装進行中（F1〜F6 完了 / F7 次フェーズ）
 - 最終更新: 2026-05-28
 - 親ロードマップ: `docs/superpowers/specs/2026-05-28-roadmap.md`
 - 前提: 完全無料、AIのみで開発、個人利用専用、Vercel エコシステム最大活用
@@ -211,8 +211,8 @@ drizzle.config.ts           Drizzle Kit 設定
 | F3 | `feat/migrate-next`（継続） | Serwist 導入。manifest.json / アイコン移植 | Lighthouse PWA 監査合格、オフラインでアプリシェル起動 | ✅ 完了（2026-05-28、自動検証緑、実機 PWA 確認はユーザー側） |
 | F4 | `feat/clerk-auth` | Clerk セットアップ。サインイン/サインアップページ。`middleware.ts` でルート保護 | サインインして `/decks` にアクセス可能 | ✅ 完了（2026-05-28、自動検証緑、手動サインイン疎通はユーザー側） |
 | F5 | `feat/db-schema` | Neon プロジェクト作成（Vercel Marketplace）。Drizzle スキーマ＋マイグレーション | `drizzle-kit push` 成功、Vercel Preview で接続確認 | ✅ コード完了（2026-05-28、スキーマ/クライアント/マイグレーション生成緑、Neon プロジェクト作成と `pnpm db:push` はユーザー側） |
-| F6 | `feat/db-sync` | `useLibrary` を Server Actions に置換。localStorage キャッシュ層実装 | 別端末からサインインして同じデッキが見える | 🔄 次フェーズ |
-| F7 | `chore/test-update` | 既存テストを DB / Server Actions 対応に更新。新規 actions のテスト追加。README に初回セットアップ手順追記 | 全テスト緑、README 更新済み | ⏳ 未着手 |
+| F6 | `feat/db-sync` | `useLibrary` を Server Actions に置換。localStorage キャッシュ層実装 | 別端末からサインインして同じデッキが見える | ✅ コード完了（2026-05-28、Server Actions/Hook/テスト緑、実 DB 接続はユーザー側で `pnpm db:push` 実行後に手動確認） |
+| F7 | `chore/test-update` | 既存テストを DB / Server Actions 対応に更新。新規 actions のテスト追加。README に初回セットアップ手順追記 | 全テスト緑、README 更新済み | 🔄 次フェーズ |
 
 各フェーズ完了時に master へマージし、Vercel Preview / Production で動作確認する。
 
