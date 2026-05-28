@@ -19,5 +19,7 @@ export const config = {
     "/((?!.+\\.[\\w]+$|_next).*)",
     // API ルートは常に middleware を通す
     "/(api|trpc)(.*)",
+    // Clerk auto-proxy
+    "/__clerk/(.*)",
   ],
 };

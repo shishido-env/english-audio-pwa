@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.4.2",
+    "@clerk/ui": "^1.14.0",
     "@fontsource-variable/geist": "^5.2.9",
     "@neondatabase/serverless": "^0.10.4",
     "@serwist/next": "^9.5.11",
