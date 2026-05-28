@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { toast } from "sonner";
 
 type Props = {
@@ -9,7 +9,9 @@ type Props = {
 export function CsvFileInput({ onImport, children }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const openPicker = () => inputRef.current?.click();
+  const openPicker = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
 
   const handleFile = async (file: File) => {
     try {
@@ -34,6 +36,7 @@ export function CsvFileInput({ onImport, children }: Props) {
           if (file) void handleFile(file);
         }}
       />
+      {/* eslint-disable-next-line react-hooks/refs -- render-prop: openPicker is a stable event handler that triggers ref.click() lazily on user interaction, not during render */}
       {children(openPicker)}
     </>
   );
