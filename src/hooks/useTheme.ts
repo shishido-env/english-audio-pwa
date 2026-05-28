@@ -14,6 +14,7 @@ function applyTheme(theme: Theme) {
 }
 
 function loadTheme(): Theme {
+  if (typeof window === "undefined") return "system";
   const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
   return stored ?? "system";
 }

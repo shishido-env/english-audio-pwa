@@ -21,6 +21,7 @@ function isVoiceMode(v: unknown): v is VoiceMode {
 }
 
 function loadPractice(): PracticeState {
+  if (typeof window === "undefined") return DEFAULTS;
   const raw = localStorage.getItem(PRACTICE_STORAGE_KEY);
   if (!raw) return DEFAULTS;
   try {

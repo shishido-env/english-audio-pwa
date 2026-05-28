@@ -18,6 +18,7 @@ const DEFAULTS: Intervals = {
 };
 
 function loadIntervals(): Intervals {
+  if (typeof window === "undefined") return DEFAULTS;
   const raw = localStorage.getItem(INTERVALS_STORAGE_KEY);
   if (!raw) return DEFAULTS;
   try {
