@@ -1,5 +1,10 @@
-import { LibraryShell } from "@/app-shell/LibraryShell";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-export default function Page() {
-  return <LibraryShell />;
+export default async function HomePage() {
+  const { userId } = await auth();
+  if (userId) {
+    redirect("/decks");
+  }
+  redirect("/sign-in");
 }
