@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Pair, PlayerState } from "@/types";
@@ -23,21 +23,16 @@ export function NowPlayingHero({
   const isActive = state.kind === "playing" || state.kind === "paused";
   const activePhase = isActive && "phase" in state ? state.phase : null;
 
-  const [revealed, setRevealed] = useState(false);
-
-  useEffect(() => {
-    setRevealed(false);
-  }, [index, hideEnglish]);
-
-  useEffect(() => {
-    if (activePhase === "en") setRevealed(true);
-  }, [activePhase, index]);
-
-  const englishHidden = hideEnglish && !revealed;
+  const [manualReveal, setManualReveal] = useState<{ index: number } | null>(
+    null,
+  );
+  const isManuallyRevealed = manualReveal?.index === index;
+  const englishHidden =
+    hideEnglish && !isManuallyRevealed && activePhase !== "en";
 
   const revealNow = () => {
     if (englishHidden) {
-      setRevealed(true);
+      setManualReveal({ index });
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         try {
           navigator.vibrate(10);
