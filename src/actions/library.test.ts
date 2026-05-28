@@ -1,7 +1,7 @@
 import "@/test/action-mocks";
-import { describe, it, expect, beforeEach } from "vitest";
-import { mockAuth, mockGetDb, resetActionMocks } from "@/test/action-mocks";
-import { getLibrary } from "./library";
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { mockAuth, mockGetDb, mockRevalidatePath, resetActionMocks } from "@/test/action-mocks";
+import { getLibrary, createDeckFromCsv } from "./library";
 
 describe("getLibrary", () => {
   beforeEach(() => {
@@ -87,5 +87,68 @@ describe("getLibrary", () => {
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.data.decks[0].pairs.map((p) => p.en)).toEqual(["One", "Two"]);
+  });
+});
+
+describe("createDeckFromCsv", () => {
+  beforeEach(() => {
+    resetActionMocks();
+  });
+
+  it("未認証は unauthorized", async () => {
+    mockAuth.mockResolvedValueOnce({ userId: null });
+    const res = await createDeckFromCsv({
+      name: "x",
+      pairs: [{ ja: "あ", en: "A" }],
+    });
+    expect(res).toEqual({ ok: false, error: "unauthorized" });
+  });
+
+  it("空の name は invalid_input", async () => {
+    const res = await createDeckFromCsv({
+      name: "  ",
+      pairs: [{ ja: "あ", en: "A" }],
+    });
+    expect(res).toEqual({ ok: false, error: "invalid_input" });
+  });
+
+  it("空の pairs は invalid_input", async () => {
+    const res = await createDeckFromCsv({ name: "x", pairs: [] });
+    expect(res).toEqual({ ok: false, error: "invalid_input" });
+  });
+
+  it("成功時に deck と cards を tx 内で insert し新デッキを返す", async () => {
+    const insertedDeck = {
+      id: "new-deck-uuid",
+      userId: "user_test_123",
+      name: "new_deck",
+      importedAt: new Date(),
+    };
+    const txMock = {
+      insert: vi.fn().mockImplementation(() => ({
+        values: vi.fn().mockImplementation((vals: unknown) => ({
+          returning: vi.fn().mockResolvedValue(
+            Array.isArray(vals) ? vals : [insertedDeck],
+          ),
+        })),
+      })),
+    };
+    const dbMock = {
+      transaction: vi.fn().mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+        return fn(txMock);
+      }),
+    };
+    mockGetDb.mockReturnValueOnce(dbMock);
+    const res = await createDeckFromCsv({
+      name: "new_deck",
+      pairs: [
+        { ja: "あ", en: "A" },
+        { ja: "い", en: "I" },
+      ],
+    });
+    expect(res.ok).toBe(true);
+    expect(dbMock.transaction).toHaveBeenCalledTimes(1);
+    expect(txMock.insert).toHaveBeenCalledTimes(2); // 1 deck + 1 cards-bulk
+    expect(mockRevalidatePath).toHaveBeenCalledWith("/decks");
   });
 });
